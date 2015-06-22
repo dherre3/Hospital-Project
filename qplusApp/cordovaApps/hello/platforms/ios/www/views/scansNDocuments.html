@@ -1,0 +1,166 @@
+<ons-page>
+    <ons-toolbar>
+        <div class="left">
+            <ons-toolbar-button ng-click="menu.toggle()">
+                <ons-icon icon="ion-navicon" size="28px" fixed-width="false"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+        <div class="center">Settings</div>
+    </ons-toolbar>
+    <ons-row style="margin-top: 30px">
+        <ons-col>
+        <div class="container" align="center" ng-controller="ScansDocumentController">
+
+<ons-navigator ng-show="showFullPhotos" var="myNavigator"></ons-navigator>
+
+<div ng-show="showListCarousel">
+
+<button class="button button--quiet" ng-click="showList=true" align="center" style="margin-left:20px">Show List</button>
+<ons-list id="mylist" style="margin-left:20px" ng-show="showList">
+
+
+        <ons-list-header>Photos  |<button class="button button--quiet" style="text-align:left" ng-click="showList=false">hide</button></ons-list-header>
+      
+        <ons-list-item modifier="tappable" >
+          <label class="radio-button radio-button--list-item">
+            <input  ng-model="pickPic.name" type="radio" value="angelFalls" name="a" checked="checked">
+            <div class="radio-button__checkmark radio-button--list-item__checkmark"></div>
+            Angel Falls
+          </label>
+        </ons-list-item>
+
+        <ons-list-item modifier="tappable" ng-click="openTab('image2')">
+          <label class="radio-button radio-button--list-item">
+            <input type="radio" ng-model="pickPic.name" value="mountEverest" name="a">
+            <div class="radio-button__checkmark radio-button--list-item__checkmark"></div>
+            Mount Everest
+          </label>
+        </ons-list-item>
+
+        <ons-list-item modifier="tappable" >
+          <label class="radio-button radio-button--list-item">
+            <input ng-model="pickPic.name" value="colisium" type="radio" name="a">
+            <div class="radio-button__checkmark radio-button--list-item__checkmark"></div>
+            Colisium
+          </label>
+        </ons-list-item>
+
+        <ons-list-item modifier="tappable" >
+          <label class="radio-button radio-button--list-item">
+            <input ng-model="pickPic.name" value="volcano" type="radio" name="a">
+            <div class="radio-button__checkmark radio-button--list-item__checkmark"></div>
+            Kīlauea Volcano
+          </label>
+        </ons-list-item>
+        
+      </ons-list>
+            
+
+          <div ng-show="showMe">
+            <h5 style="color:#0066FF" >Swipe right or left to go through the images</h5>
+            <ons-carousel var="app.carousel" swipeable overscrollable auto-scroll>
+                    <ons-carousel-item>
+                     <a class="img-responsive" href ng-click="clickMe()" align="center">
+                     <img ng-src="{{imageList['image1']}}" alt="Starter template example"></a>
+
+                             <h3 align="center">Angel Falls, Venezuela</h3>
+
+                            <p align="center">Photo taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="#">View Details >></a>
+                            </p>
+                    </ons-carousel-item>
+                    <ons-carousel-item>
+                            <a class="img-responsive" href ng-click="clickMe()" align="center">
+            <img ng-src="{{imageList['image2']}}" alt="Starter template example"></a>
+
+                             <h3 align="center">Mount Everest, Nepal</h3>
+
+                            <p align="center">Photo taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="#">View Details >></a>
+                            </p>
+                    </ons-carousel-item>
+                    <ons-carousel-item>
+                     <a class="img-responsive" href ng-click="clickMe()" align="center">
+                     <img ng-src="{{imageList['image3']}}" alt="Starter template example"></a>
+
+                             <h3 align="center">Coliseum, Rome</h3>
+
+                            <p align="center">Photo taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="#">View Details >></a>
+                            </p>
+                    </ons-carousel-item>
+                    <ons-carousel-item>
+                     <a class="img-responsive" href ng-click="clickMe()" align="center">
+                     <img ng-src="{{imageList['image4']}}" alt="Starter template example"></a>
+
+                             <h3 align="center">Kīlauea Volcano, Hawaii</h3>
+
+                            <p align="center">Photo taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="#">View Details >></a>
+                            </p>
+                    </ons-carousel-item>
+
+                    <!--<ons-carousel-cover><div class="cover-label">Swipe left or right</div></ons-carousel-cover>-->
+            </ons-carousel>
+            </div>
+ </div>
+                <br>
+                <!--
+                <div id="myCarousel" class="carousel slide" data-ride="carousel">
+               
+                    <ol class="carousel-indicators">
+                        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                        <li data-target="#myCarousel" data-slide-to="1"></li>
+                        <li data-target="#myCarousel" data-slide-to="2"></li>
+                    </ol>
+                   
+                    <div class="carousel-inner" role="listbox" align="center">
+                        <div class="item" align="center" width="230" height="173"> <a class="thumbnail" href="http://davidfherrerar.me" ng-click="clickMe()" align="center">
+        <img ng-src="data:image/png;base64,{{imageList['image1']}}" alt="Starter template example"></a>
+
+                             <h3 align="center">Lung Scan</h3>
+
+                            <p align="center">Scan taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="http://davidfherrerar.me">View Details>></a>
+                            </p>
+                        </div>
+                        <div class="item active" align="center" width="230" height="173"> <a class="thumbnail" href="http://davidfherrerar.me" ng-click="clickMe()" align="center">
+        <img  ng-src="data:image/png;base64,{{imageList['image3']}}" alt="Starter template example">
+      </a>
+
+                             <h3 align="center">Lung Scan</h3>
+
+                            <p align="center">Scan taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="http://davidfherrerar.me">View Details>></a>
+
+                            </p>
+                        </div>
+                        <div class="item" align="center" width="230" height="173"> <a class="thumbnail" href="http://davidfherrerar.me" ng-click="clickMe()" align="center">
+        <img  ng-src="data:image/png;base64,{{imageList['image2']}}" alt="Starter template example">
+      </a>
+
+                             <h3 align="center">Lung Scan</h3>
+
+                            <p align="center">Scan taken {{date|date}}. Click on the image to zoom in, or the following link for more information:&nbsp;
+                                <br><a class="btn btn-default" href="http://davidfherrerar.me">View Details>></a>
+
+                            </p>
+                        </div>
+                        <!--</div>-->
+                   <!-- </div>-->
+                    <!-- Left and right controls --> 
+                   <!-- <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    
+     <span class="sr-only">Previous</span>
+    </a>
+ <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>-->
+
+                </div>
+            </div>
+        </ons-col>
+    </ons-row>
+</ons-page>
