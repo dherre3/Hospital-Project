@@ -1,0 +1,119 @@
+<ons-navigator title="Navigator" var="myNavigatorDocuments">
+<ons-page ng-controller="ScansDocumentController">
+    <ons-toolbar>
+        <div class="left">
+            <ons-toolbar-button ng-click="menu.toggle()">
+                <ons-icon icon="ion-navicon" size="28px" fixed-width="false"></ons-icon><div class="notification menu-notification">{{Notifications}}</div>
+            </ons-toolbar-button>
+        </div>
+        <div class="center">Patient Documents</div>
+    </ons-toolbar>
+    <ons-pull-hook ng-action="loadDocu($done)" var="loader">
+        <span ng-switch="loader.getCurrentState()">
+          <span ng-switch-when="initial"><ons-icon size="35px" icon="ion-arrow-down-a"></ons-icon> Pull down to refresh</span>
+          <span ng-switch-when="preaction"><ons-icon size="35px" icon="ion-arrow-up-a"></ons-icon> Release to refresh</span>
+          <span ng-switch-when="action"><ons-icon size="35px" spin="true" icon="ion-load-d"></ons-icon> Loading data...</span>
+        </span>
+</ons-pull-hook>
+   <div class="container" style="margin-top:20px">
+<a style="text-decoration:none" href ng-click="menu.setMainPage('views/notifications.html',{closeMenu:true})">
+        <alert align="center" ng-show="showAlert&&Notifications>1" ng-model="alert" type="success" close="closeAlert()">You have {{Notifications}} unseen notifications. <span class="hidden-xs">Go to your Notifications page under the menu on the left.</span>
+        </alert>
+        <alert align="center" ng-show="showAlert&&Notifications<=1" ng-model="alert" type="success" close="closeAlert()">You have {{Notifications}} unseen notification. <span class="hidden-xs">Go to your Notifications page under the menu on the left.</span>
+        </alert></a>
+ </div>
+        <div class="container">
+        
+        <accordion close-others="oneAtATime">
+    <accordion-group heading="Static Header, initially expanded" is-open="status.isFirstOpen" is-disabled="status.isFirstDisabled">
+      This content is straight in the template.
+    </accordion-group>
+    <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
+      {{group.content}}
+    </accordion-group>
+    <accordion-group style="text-decoration:none" heading="Dynamic Body Content">
+      <p>The body of the accordion group grows to fit the contents</p>
+        <button class="btn btn-default btn-sm" ng-click="addItem()">Add Item</button>
+        <div ng-repeat="item in items">{{item}}</div>
+    </accordion-group>
+    <accordion-group is-open="status.open">
+        <accordion-heading>
+            I can have markup, too! <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
+        </accordion-heading>
+        This is just some content to illustrate fancy headings.
+    </accordion-group>
+  </accordion>  
+
+        <div align="center" class="col-md-3 col-sm-3 col-xs-12 col-lg-3">
+            <div class="thumbnail" style="width:220px">
+            <a href ng-click="myNavigatorDocuments.pushPage('pageDocument.html', {param:type},{ animation : 'slide' } )">
+                <img width="120px" height="auto" src="./img/treatment_plan.png" alt="Starter template example">
+
+          <div class="caption">
+            <h5>Radiotherapy Treatment</h5>
+          <p>June, 26 2014</p>
+           
+          </div>
+          </a>
+        </div>
+        </div>
+         <div  align="center" class="col-md-3 col-sm-3 col-xs-12 col-lg-3">
+            <div  class="thumbnail" style="width:220px">
+            <a href ng-click="myNavigatorDocuments.pushPage('pageDocument.html', {param:type},{ animation : 'slide' } )">
+                <img width="120px" height="auto" src="./img/treatment_plan.png" alt="Starter template example">
+
+          <div class="caption">
+            <h5>Radiotherapy Treatment</h5>
+          <p>June, 26 2014</p>
+           
+          </div>
+          </a>
+        </div>
+        </div>
+         <div  align="center" class="col-md-3 col-sm-3 col-xs-12 col-lg-3">
+            <div  class="thumbnail" style="width:220px">
+            <a href ng-click="myNavigatorDocuments.pushPage('pageDocument.html', {param:type},{ animation : 'slide' } )">
+                <img width="120px" height="auto" src="./img/treatment_plan.png" alt="Starter template example">
+
+          <div class="caption">
+            <h5>Radiotherapy Treatment</h5>
+          <p>June, 26 2014</p>
+           
+          </div>
+          </a>
+        </div>
+        </div>
+         <div align="center" class="col-md-3 col-sm-3 col-xs-12 col-lg-3">
+            <div class="thumbnail" style="width:220px">
+            <a href ng-click="myNavigatorDocuments.pushPage('pageDocument.html', {param:type},{ animation : 'slide' } )">
+                <img width="120px" height="auto" src="./img/treatment_plan.png" alt="Starter template example">
+
+          <div class="caption">
+            <h5>Radiotherapy Treatment</h5>
+          <p>June, 26 2014</p>
+           
+          </div>
+          </a>
+        </div>
+        </div>
+                <br>
+             
+
+                </div>
+            </div>
+</ons-page>
+<ons-template id="pageDocument.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="left"><ons-back-button>Back</ons-back-button></div>
+      <div class="center">{{header}}</div>
+    </ons-toolbar>
+     <div class="panel panel-default">
+  <div class="panel-body">
+    <img class="img-responsive" src="./img/treatment_plan.png" alt="Starter template example">
+  </div>
+  </div>
+     
+  </ons-page>
+</ons-template>
+</ons-navigator>
