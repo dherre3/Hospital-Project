@@ -10,15 +10,15 @@
 *@requires $timeout
 *@requires $filter
 *@requires $cordovaNetwork
-*@requires MUHCApp.services.UserDataMutable
+*@requires MUHCApp.services.Patient
 *@requires MUHCApp.services.UpdateUI
-*@requires MUHCApp.services.UserTaskAndAppointments
+*@requires MUHCApp.services.UserPlanWorkflow
 *@element textarea
 *@description
 *Manages the logic of the home screen after log in, instatiates 
 */
 var myApp = angular.module('MUHCApp');
-myApp.controller('homeController', ['$scope', 'UserDataMutable','UpdateUI', '$timeout','$filter','$cordovaNetwork','UserTasksAndAppointments',function ($scope, UserDataMutable,UpdateUI,$timeout,$filter,$cordovaNetwork,UserTasksAndAppointments) {
+myApp.controller('HomeController', ['Appointments','$scope','Patient','UpdateUI', '$timeout','$filter','$cordovaNetwork','UserPlanWorkflow','$rootScope', 'tmhDynamicLocale','$translate', '$translatePartialLoader', function (Appointments, $scope, Patient,UpdateUI,$timeout,$filter,$cordovaNetwork,UserPlanWorkflow, $rootScope,tmhDynamicLocale, $translate, $translatePartialLoader) {
     var updatedField=null;
        /**
         * @ngdoc method
@@ -31,68 +31,81 @@ myApp.controller('homeController', ['$scope', 'UserDataMutable','UpdateUI', '$ti
         *
         *
         */
+        if(!$rootScope.refresh){
+            UpdateUI.UpdateUserFields();
+        }
+        
+        /*$scope.locales = [
+            { name: 'English', id: 'en' },
+            { name: 'French', id: 'fr' },
+            { name: 'Spanish', id: 'es' }
+        ];
 
-        function loadInfo(){
-           var dataVal= UpdateUI.UpdateUserFields();
-           dataVal.then(function(data){
-                setTimeout(function(){
-                    $scope.$apply(function(){
-                        $scope.NextAppointment=UserTasksAndAppointments.getCurrentTaskOrAppointment().Date;
-                        $scope.FirstName = UserDataMutable.getFirstName();
-                        $scope.LastName = UserDataMutable.getLastName();
-                        $scope.TelNum = UserDataMutable.getTelNum();
-                        $scope.Email = UserDataMutable.getEmail();
-                        $scope.picture = UserDataMutable.getPictures();
-                        
-
-                    });
-                },20)}, function(error){console.log(error);});
-
-        };
-
-
-         $scope.load = function($done) {
+        $translatePartialLoader.addPart('home');
+        $translate.refresh();
+        $scope.updateLocale = function (locale) {
+            tmhDynamicLocale.set(locale);
+            $translate.use(locale);
+        };*/
+        $scope.doSomething=function(){
+            console.log('I have swiped left');
+        }
+        $scope.load = function($done) {
+          
           $timeout(function() {
+
             loadInfo();
                 $done();
                 
           }, 1000);
         };
+        function loadInfo(){
+           var dataVal= UpdateUI.UpdateUserFields();
+           dataVal.then(function(data){
+                $timeout(function(){
+                    $scope.NextAppointment=(Appointments.getNextAppointment()).Object.ScheduledStartTime;
+                    $scope.FirstName = Patient.getFirstName();
+                    $scope.LastName = Patient.getLastName();
+                    $scope.TelNum = Patient.getTelNum();
+                    $scope.Email = Patient.getEmail();
+
+                });
+        });
+       }
 
 //Sets all the variables in the view. 
-    
     $scope.dateToday=new Date();
-    //Next appointment fields
-    $scope.NextAppointmentDate=UserTasksAndAppointments.getCurrentTaskOrAppointment().Date;
-    $scope.NextAppointmentType=UserTasksAndAppointments.getCurrentTaskOrAppointment().Name;
-    if($scope.NextAppointmentDate-$scope.dateToday>0) { $timeout(function(){$scope.showNextAppointment=true})}else{ $timeout(function(){$scope.showNextAppointment=false})};
-    
-    $scope.FirstName = UserDataMutable.getFirstName();
-    $scope.LastName = UserDataMutable.getLastName();
-    $scope.TelNum = UserDataMutable.getTelNum();
-    $scope.Email = UserDataMutable.getEmail();
-    $scope.picture = UserDataMutable.getPictures();
-    $scope.primaryPhysician=UserDataMutable.getPrimaryPhysician();
-    $scope.oncologist=UserDataMutable.getOncologist();
+    $scope.NextAppointmentDate=(Appointments.getNextAppointment()).Object.ScheduledStartTime;
+    $scope.NextAppointmentType=(Appointments.getNextAppointment()).Object.AppointmentType;
+    if($scope.NextAppointmentDate.getTime()-$scope.dateToday.getTime()>0) { $timeout(function(){$scope.showNextAppointment=true})}else{ $timeout(function(){$scope.showNextAppointment=false})};
+    $scope.FirstName = Patient.getFirstName();
+    $scope.LastName = Patient.getLastName();
+    $scope.TelNum = Patient.getTelNum();
+    $scope.Email = Patient.getEmail();
+}]);
 
 
-    
 /**
- * @ngdoc method
- * @scope
- * @name $scope.goContact
- * @methodOf MUHCApp.controller:HomeController
- * @description
- * Method sets the contact for the {@link MUHCApp.controller:ContactDoctorController ContactDoctorController} by passing object {param:type} in the pushPage Onsen Method
- * 
- *
- * @param {string} type Specifies the contact page the view going to. Either 'Oncologist', or 'Physician'.
- * @returns {void} Does not return anything
- */
-    $scope.goContact=function(type){
-        myNavigator.pushPage('page2.html', {param:type},{ animation : 'slide' } );
+* @ngdoc controller
+* @scope
+* @name MUHCApp.controller:ContactDoctorController
+* @requires $scope
+* @description Controller manages the logic for the contact page of the doctor, the user is directed here through
+* the {@link MUHCApp.controller:HomeController HomeController} view.
+*
+**/
+myApp.controller('ContactDoctorsController',['$scope','Doctors',function($scope,Doctors){   
+    $scope.oncologists=Doctors.getOncologists();
+    $scope.primaryPhysician=Doctors.getPrimaryPhysician();
+    $scope.otherDoctors=Doctors.getOtherDoctors();
+    console.log($scope.otherDoctors);
+    $scope.goDoctorContact=function(doctor){
+        if(doctor===undefined){
+            myNavigator.pushPage('page2.html', {param:$scope.primaryPhysician},{ animation : 'slide' } );
+        }else{
+            myNavigator.pushPage('page2.html', {param:doctor},{ animation : 'slide' } );
+        }   
     };
-
 }]);
 /**
 * @ngdoc controller
@@ -103,20 +116,16 @@ myApp.controller('homeController', ['$scope', 'UserDataMutable','UpdateUI', '$ti
 * the {@link MUHCApp.controller:HomeController HomeController} view.
 *
 **/
-myApp.controller('ContactDoctorController',['$scope',function($scope){
+myApp.controller('ContactIndividualDoctorController',['$scope',function($scope){
  
  var page = myNavigator.getCurrentPage();
- var parameters=page.options.param;
- $scope.header=parameters;
- $scope.$watch('header',function(){
-    $scope.valueData=page.options.param;
-     console.log(page);
-
- });
- var page = myNavigator.getCurrentPage();
-    console.log(page.options.param);
-    console.log("adas");
-
-
+ $scope.doctor=page.options.param;
+ if($scope.doctor.PrimaryFlag===1){
+    $scope.header='Primary Physician';
+ }else if($scope.doctor.OncologistFlag===1){
+     $scope.header='Oncologist';
+ }else{
+    $scope.header='Doctor';
+ }
 
 }]);

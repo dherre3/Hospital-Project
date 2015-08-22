@@ -22,14 +22,7 @@ var myApp=angular.module('MUHCApp.filters',[]);
       var minutes=date.getMinutes();
       var seconds=date.getSeconds();
       var hours=date.getHours();
-      var dateTime='';
-      if(hours>=12){
-        dateTime='PM';
-        hours=hours-12;
-      }else{
-        dateTime='AM';
-      }
-      var string= year+'-'+month+'-'+day+'  '+hours+':'+ minutes +':'+seconds+' '+dateTime;
+      var string= year+'-'+month+'-'+day+'T'+hours+':'+ minutes +':'+seconds+'.000'+'Z';
       return string;
 
 
@@ -43,8 +36,10 @@ var myApp=angular.module('MUHCApp.filters',[]);
 	myApp.filter('formatDate',function(){
 		return function(str) {
         if(typeof str==='string'){
-
-            var res = str.split("  ");
+            str=str.replace('T',' ');
+            str=str.replace('Z','');
+            return new Date(str);
+            /*var res = str.split("  ");
            var res1=res[1].split(" ");
             var res2 = (res[0]).split("-");
             //console.log(res2);
@@ -74,8 +69,9 @@ var myApp=angular.module('MUHCApp.filters',[]);
             }
             var d = new Date(parseInt(year1), parseInt(month1) - 1, parseInt(day1), parseInt(hours1), parseInt(minutes1));
             return d;
-        }else{ return new Date();}
+        }else{ return new Date();}*/
         }
+      }
 	});
 
 myApp.filter('propsFilter', function() {

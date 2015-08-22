@@ -106,14 +106,14 @@ NOTE: Once in the Home page, the routing is dealt by onsen functions. Link to ex
 */
 
 //Routes for angular views
-var myApp = angular.module('MUHCApp', ['ngAnimate','luegg.directives','ngSanitize','ui.select','ui.router', 'onsen', 'firebase','ui.bootstrap','MUHCApp.filters','ngCordova'])
-    .config(['$urlRouterProvider', '$stateProvider', function ($urlRouterProvider, $stateProvider) {
+var myApp = angular.module('MUHCApp', ['tmh.dynamicLocale','pascalprecht.translate','ngAnimate','luegg.directives','ngSanitize','ui.select','ui.router', 'onsen', 'firebase','ui.bootstrap','MUHCApp.filters','ngCordova'])
+    .config(['$urlRouterProvider', 'tmhDynamicLocaleProvider','$stateProvider', '$translateProvider', '$translatePartialLoaderProvider', function ($urlRouterProvider, tmhDynamicLocaleProvider, $stateProvider, $translateProvider, $translatePartialLoaderProvider) {
     
     $urlRouterProvider.otherwise('/');
     $stateProvider.state('logIn', {
         url: '/',
         templateUrl: 'templates/logIn.html',
-        controller: 'loginController',
+        controller: 'LoginController',
         resolve: {
       // controller will not be loaded until $waitForAuth resolves
       // Auth refers to our $firebaseAuth wrapper in the example above
@@ -139,7 +139,7 @@ var myApp = angular.module('MUHCApp', ['ngAnimate','luegg.directives','ngSanitiz
     .state('loading', {
         url: '/loading',
         templateUrl: 'templates/loading.html',
-        controller: 'loadingController',
+        controller: 'LoadingController',
         resolve: {
       // controller will not be loaded until $waitForAuth resolves
       // Auth refers to our $firebaseAuth wrapper in the example above
@@ -152,7 +152,7 @@ var myApp = angular.module('MUHCApp', ['ngAnimate','luegg.directives','ngSanitiz
         .state('Home', {
         url: '/Home',
         templateUrl: 'templates/menu.html',
-        controller: 'homeController',
+        controller: 'HomeController',
            resolve: {
       // controller will not be loaded until $waitForAuth resolves
       // Auth refers to our $firebaseAuth wrapper in the example above
@@ -187,7 +187,57 @@ var myApp = angular.module('MUHCApp', ['ngAnimate','luegg.directives','ngSanitiz
       }]
     }
     });
+    $translatePartialLoaderProvider.addPart('home');
+    $translateProvider.useLoader('$translatePartialLoader', {
+      urlTemplate: './Languages/appTranslationTablesViews/{part}/{lang}.json'
+    });
+    $translateProvider.preferredLanguage('en');
 
+    tmhDynamicLocaleProvider.localeLocationPattern('./Languages/angular-locales/angular-locale_{{locale}}.js');
 
 }]);
+
+
+/**
+*@ngdoc service
+*@name MUHCApp.run
+*@description Service is in charge of checking that the user is authorized at every state change by checking the parameters stored
+in the Firebase localstorage,  Check run service on angular {{link}}
+**/
+myApp.run(function ($rootScope, $state, $stateParams,$q, $rootScope,$translate) {
+
+    $rootScope.$on('$translatePartialLoaderStructureChanged', function () {
+      $translate.refresh();
+     });
+    $rootScope.$state = $state;
+    $rootScope.$stateParams = $stateParams;
+    $rootScope.$on("$stateChangeError", function(event, toState, toParams, fromState, fromParams, error) {
+  // We can catch the error thrown when the $requireAuth promise is rejected
+  // and redirect the user back to the home page
+  $state.go('logIn');
+  //console.log('listening');
+  if (error === "AUTH_REQUIRED") {
+    /**
+    *@ngdoc method
+    *@name redirectPage
+    *@methodOf MUHCApp.run
+    *@returns {void} Returns a promise to perform an synch refresh page right after redirecting to the login state.
+    *@description Using the angularfire, $firebaseAuth, service, it checks whether is authorized, if its not
+    *it redirects the user to the logIn page, by using the login state and reloads the page.
+    */
+    function redirectPage(){
+            var r=$q.defer();
+            $state.go('logIn');
+            r.resolve;
+            return r.promise;
+        }
+
+        var redirect=redirectPage();
+        redirect.then(setTimeout(function(){location.reload()},100));
+        
+}
+});
+});
+
+
 

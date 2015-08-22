@@ -9,7 +9,6 @@ myApp.controller('IndividualMapController',['$timeout', '$scope',function($timeo
             canvas: document.getElementById('mycanvas'),
             path: "./img/D-S1_map_RadOnc-MedPhys_16June2015_en.png"
         });
-        console.log('ass');
 
 
   }]);
@@ -19,7 +18,6 @@ myApp.controller('IndividualMapController1',['$timeout', '$scope',function($time
             canvas: document.getElementById('mycanvas1'),
             path: "./img/D2_Palliative_psychoncology_16June2015_en.png"
         });
-        console.log('ass');
 
 
   }]);
@@ -28,7 +26,6 @@ myApp.controller('IndividualMapController2',['$timeout', '$scope',function($time
             canvas: document.getElementById('mycanvas2'),
             path: "./img/D-RC_ODC_16June2015_en_FNL.png"
         });
-        console.log('ass');
 
 
   }]);

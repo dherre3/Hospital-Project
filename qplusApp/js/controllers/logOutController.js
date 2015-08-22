@@ -3,26 +3,19 @@
 //  Created by David Herrera on 2015-05-04.
 //  Copyright (c) 2015 David Herrera. All rights reserved.
 //
-angular.module('MUHCApp').controller('logOutController',['Auth','UserAuthorizationInfo','UserDataMutable', '$state','$q', function(Auth, UserAuthorizationInfo,UserDataMutable,$state,$q){
+angular.module('MUHCApp').controller('logOutController',['Auth','UserAuthorizationInfo', '$state','$q','RequestToServer', function(Auth, UserAuthorizationInfo,$state,$q,RequestToServer){
 		console.log(Auth);
 	//this.firebaseLink.set({logged: 'false'});
 		var firebaseLink=new Firebase('https://luminous-heat-8715.firebaseio.com/');
-		firebaseLink.child('PatientActivity/'+UserAuthorizationInfo.UserName).set({LogIn: false});
-		firebaseLink.child('PatientActivity/'+UserAuthorizationInfo.UserName).set({LogOut: {Value:'true',Date:(new Date()).toString()}});
+		RequestToServer.sendRequest('Logout');
 		//firebaseLink.child('Users/'+UserAuthorizationInfo.UserName).set({Logged: 'false'});
 		var authData = firebaseLink.getAuth();
-		console.log(authData);
 		firebaseLink.unauth();
-		console.log(authData);
-
-		
-
-		console.log(UserDataMutable);
 		delete UserDataMutable;
 		delete UserAuthorizationInfo;
-		console.log(UserDataMutable);
-		console.log(authData);
-		
+		window.localStorage.removeItem('UserAuthorizationInfo');
+		window.localStorage.removeItem('pass');
+		window.localStorage.removeItem(UserAuthorizationInfo.UserName);
 		function redirectPage(){
 			Auth.$unauth();
 			var r=$q.defer();

@@ -4,62 +4,91 @@
 *
 **/
 var myApp=angular.module('MUHCApp');
-myApp.controller('PatientPortalController',function(UpdateUI, $rootScope, UserAuthorizationInfo,$location,$anchorScroll,$timeout,$scope,UserMessages){
+myApp.controller('PatientPortalController',function(UpdateUI, RequestToServer, $filter, $rootScope, UserAuthorizationInfo,$location,$anchorScroll,$timeout,$scope,Messages, Patient,$rootScope){
+ $rootScope.NumberOfNewMessages='';
  function loadInfo(){
            var dataVal= UpdateUI.UpdateUserFields();
            dataVal.then(function(data){
                 $timeout(function(){
-                  $scope.messages=UserMessages.getUserMessages();
+                  $scope.messages=Messages.getUserMessages();
                   $scope.conversation=$scope.messages[$scope.selectedIndex].Messages;
+                  $rootScope.NumberOfNewMessages='';       
                 });
 }, function(error){console.log(error);});
 
         };
-
-
          $scope.load = function($done) {
+          RequestToServer.sendRequest('Refresh');
           $timeout(function() {
             loadInfo();
-                $done();
-                
-          }, 1000);
+                $done();        
+          }, 3000);
 };
- $scope.messages=UserMessages.getUserMessages();
- console.log($scope.messages);
-    var FirebaseLink=new Firebase('https://luminous-heat-8715.firebaseio.com/users/' + UserAuthorizationInfo.UserName+'/Messages/0');
-    FirebaseLink.on('child_changed',function(snapshot,prevChild){
-      console.log(prevChild);
-      console.log(snapshot.val());
-    },function(error){
-      console.log('error');
-    });
 
+ $scope.messages=Messages.getUserMessages();
+ 
 $scope.personClicked=function(index){
     var conversation=$scope.messages[index].Messages;
     $timeout(function(){
       $scope.glue=false;
       $scope.person.selected='';
       $scope.selectedIndex=index;
+       if($scope.messages[$scope.selectedIndex].ReadStatus==0){
+        for (var i = 0; i < conversation.length; i++) {
+            console.log($scope.messages[index].Messages[i].MessageSerNum);
+            RequestToServer.sendRequest('MessageRead',$scope.messages[index].Messages[i].MessageSerNum);
+            $scope.messages[index].Messages[i].ReadStatus=1;
+        };
+    }
+      $scope.messages[$scope.selectedIndex].ReadStatus=1;
       $scope.conversation=conversation;
+      Messages.changeConversationReadStatus($scope.selectedIndex);
       $scope.glue=true;
-      });
+    });
   };
 $scope.$watch('person.selected', function(){
   $timeout(function(){
     $scope.glue=false;
     if($scope.person.selected!==undefined){
       var index=$scope.person.selected.index;
-      var conversation=$scope.messages[index].Messages;
-      $scope.selectedIndex=index;
-      $scope.conversation=conversation;
-      $scope.glue=true;
-  }
+      if(index!==undefined)
+      {
+        $scope.selectedIndex=index;
+        var conversation=$scope.messages[$scope.selectedIndex].Messages;
+        if($scope.messages[$scope.selectedIndex].ReadStatus==0){
+            for (var i = 0; i < $scope.messages[$scope.selectedIndex].Messages.length; i++) {
+                console.log($scope.messages[index].Messages[i].MessageSerNum);
+                RequestToServer.sendRequest('MessageRead',$scope.messages[index].Messages[i].MessageSerNum);
+                $scope.messages[index].Messages[i].ReadStatus=1;         
+            };
+        Messages.changeConversationReadStatus($scope.selectedIndex);
+        $scope.messages[$scope.selectedIndex].ReadStatus=1; 
+        }
+        $scope.conversation=conversation;
+        $scope.glue=true;
+      }else{
+        if($scope.messages[$scope.selectedIndex].ReadStatus==0){
+          for (var i = 0; i < $scope.messages[$scope.selectedIndex].Messages.length; i++) {
+            console.log($scope.messages[index].Messages[i].MessageSerNum);
+              RequestToServer.sendRequest('MessageRead',$scope.messages[index].Messages[i].MessageSerNum);
+              $scope.messages[index].Messages[i].ReadStatus=1;         
+          };
+          Messages.changeConversationReadStatus($scope.selectedIndex);
+          $scope.messages[$scope.selectedIndex].ReadStatus=1;
+        }
+        $scope.conversation=$scope.messages[$scope.selectedIndex];
+        $scope.glue=true;
+      }
+    }
   });
- 
 });
+
   $scope.person = {};
 
   $scope.people = [];
+  if($scope.messages===undefined){
+    $scope.messages=[];
+  }
   for(var i=0;i<$scope.messages.length;i++){
     var tmp={};
     tmp.name=$scope.messages[i].MessageRecipient;
@@ -69,49 +98,68 @@ $scope.$watch('person.selected', function(){
     $scope.people.push(tmp);
   }
   $timeout(function(){
-    $scope.selectedIndex=0;
-    $scope.conversation=$scope.messages[0].Messages;
-    $scope.glue=true;
-  })
-$scope.submitMessage=function(){
-  console.log($scope.newMessage);
-  var messageTmp={};
-  messageTmp.Role='1';
-  messageTmp.MessageContent=$scope.newMessage;
-  messageTmp.Date=new Date();
-  UserMessages.addNewMessageToConversation($scope.selectedIndex, messageTmp.Role, messageTmp.MessageContent, messageTmp.Date);
-  console.log($scope.messages);
-  $scope.newMessage=''; 
+      $scope.person.selected='';
+      $scope.messages[0];
+      $scope.selectedIndex=0;
+      $scope.conversation=$scope.messages[0].Messages;
+      $scope.glue=true;
+  });
+  $scope.submitMessage=function(){
+    //Create object to send
+    var objectToSend={};
+    //Get conversation for details
+    var conversation=$scope.messages[$scope.selectedIndex];
+    //create object
+    objectToSend.ReceiverSerNum=conversation.UserSerNum;
+    objectToSend.SenderSerNum=Patient.getUserSerNum();
+    objectToSend.SenderRole='Patient';
+    objectToSend.ReceiverRole=conversation.Role;
+    objectToSend.MessageDate=$filter('formatDateToFirebaseString')(new Date());
+    objectToSend.MessageContent=$scope.newMessage;
+    //Add message to conversation
+    Messages.addNewMessageToConversation($scope.selectedIndex,$scope.newMessage,new Date());
+    //Send message request
+    RequestToServer.sendRequest('Message',objectToSend);
+    $scope.newMessage=''; 
+  }
 
-}
-/*var firebaseLink=new Firebase("https://blazing-inferno-1723.firebaseio.com/");
- firebaseLink.child('Updates').once('value', function (snapshot) {
-        $timeout(function () {
-            $scope.updates = snapshot.val();
-            $scope.currentTime=new Date();
-        
-            $scope.arrayUpdates = Object.keys($scope.updates);
-        });
-    }, function (error) {
-        console.log(error);
-    });*/
-
+  $scope.getStyle=function(index){
+    
+    if($scope.messages[index].ReadStatus===0){
+        return '#3399ff';
+    }else{
+        return '#ccc';
+    }
+  };
 });
-myApp.controller('ListOfConversationMobileController',['UpdateUI', '$rootScope', 'UserAuthorizationInfo','$location','$anchorScroll','$timeout','$scope','UserMessages',
-  function(UpdateUI, $rootScope, UserAuthorizationInfo,$location,$anchorScroll,$timeout,$scope,UserMessages){
+myApp.controller('ListOfConversationMobileController',['RequestToServer','UpdateUI', '$rootScope', 'UserAuthorizationInfo','$location','$anchorScroll','$timeout','$scope','Messages',
+  function(RequestToServer, UpdateUI, $rootScope, UserAuthorizationInfo,$location,$anchorScroll,$timeout,$scope,Messages){
+     
      $scope.$watch('person.selected', function(){
         if($scope.person.selected!==undefined){
           $timeout(function(){
             var index=$scope.person.selected.index;
             $scope.person.selected=undefined;
+            if($scope.messages[index].ReadStatus==0){
+            for (var i = 0; i < $scope.messages[index].Messages.length; i++) {
+                RequestToServer.sendRequest('MessageRead',$scope.messages[index].Messages[i].MessageSerNum);
+                $scope.messages[index].Messages[i].ReadStatus=1;
+            };
+          }
+            $scope.messages[$scope.selectedIndex].ReadStatus=1;
+            Messages.changeConversationReadStatus($scope.selectedIndex);
+            Messages.changeConversationReadStatus($scope.selectedIndex);
             myNavigatorMessages.pushPage("pageMessage.html", { param: index }, {animation:'slide'});
           })
         }
     });
 
-     $scope.messages=UserMessages.getUserMessages();    
+     $scope.messages=Messages.getUserMessages();    
      $scope.person = {};
      $scope.people = [];
+     if(!$scope.messages){
+      $scope.messages=[];
+     }
       for(var i=0;i<$scope.messages.length;i++){
         var tmp={};
         tmp.name=$scope.messages[i].MessageRecipient;
@@ -126,6 +174,16 @@ myApp.controller('ListOfConversationMobileController',['UpdateUI', '$rootScope',
 
         $scope.personClicked=function(index){
           $scope.person.selected=undefined;
+          if($scope.messages[index].ReadStatus==0){
+            for (var i = 0; i < $scope.messages[index].Messages.length; i++) {
+                console.log($scope.messages[index].Messages[i]);
+                RequestToServer.sendRequest('MessageRead',$scope.messages[index].Messages[i].MessageSerNum);
+                $scope.messages[index].Messages[i].ReadStatus=1;
+            };
+          }
+          $scope.messages[index].ReadStatus=1;
+          Messages.changeConversationReadStatus($scope.selectedIndex);
+          Messages.changeConversationReadStatus($scope.selectedIndex);
           myNavigatorMessages.pushPage("pageMessage.html", { param: index }, {animation:'slide'});
         };
     
@@ -135,13 +193,13 @@ myApp.controller('ListOfConversationMobileController',['UpdateUI', '$rootScope',
   }]);
 
 
-myApp.controller('MessagePageController',function(UserMessages,UpdateUI,$timeout,$scope){
+myApp.controller('MessagePageController',function(RequestToServer,$filter, Patient,Messages,UpdateUI,$timeout,$scope){
 //Loading Functionality
  function loadInfo(){
            var dataVal= UpdateUI.UpdateUserFields();
            dataVal.then(function(data){
                 $timeout(function(){
-                  $scope.messages=UserMessages.getUserMessages();
+                  $scope.messages=Messages.getUserMessages();
                   $scope.conversation=$scope.messages[$scope.selectedIndex].Messages;
                 });
 }, function(error){console.log(error);});
@@ -150,13 +208,21 @@ myApp.controller('MessagePageController',function(UserMessages,UpdateUI,$timeout
 
 
          $scope.load2 = function($done) {
+           RequestToServer.sendRequest('Refresh');
           $timeout(function() {
             loadInfo();
                 $done();
                 
-          }, 1000);
+          }, 3000);
 };
-
+ $scope.getStyle=function(index){
+    
+    if($scope.messages[index].ReadStatus===0){
+        return '#3399ff';
+    }else{
+        return '#ccc';
+    }
+  };
  
 //Obtaining Index of current message
  var page = myNavigatorMessages.getCurrentPage();
@@ -164,20 +230,29 @@ myApp.controller('MessagePageController',function(UserMessages,UpdateUI,$timeout
 //Setting the scroll to last message, and initializing the conversation parameters
  $scope.glue=false;
  $scope.selectedIndex=parameters;
- $scope.messages=UserMessages.getUserMessages();
+ $scope.messages=Messages.getUserMessages();
  $scope.conversation=$scope.messages[$scope.selectedIndex].Messages;
  $scope.glue=true;
 
 //Individual sent message function, saves message via service to firebase and to user's object
  $scope.submitMessage=function(){
-  console.log($scope.newMessage);
-  var messageTmp={};
-  messageTmp.Role='1';
-  messageTmp.MessageContent=$scope.newMessage;
-  messageTmp.Date=new Date();
-  UserMessages.addNewMessageToConversation($scope.selectedIndex, messageTmp.Role, messageTmp.MessageContent, messageTmp.Date);
-  console.log($scope.messages);
-  $scope.newMessage=''; 
+   //Create object to send
+    var objectToSend={};
+    //Get conversation for details
+    var conversation=$scope.messages[$scope.selectedIndex];
+    //create object
+    objectToSend.ReceiverSerNum=conversation.UserSerNum;
+    objectToSend.SenderSerNum=Patient.getUserSerNum();
+    objectToSend.SenderRole='Patient';
+    objectToSend.ReceiverRole=conversation.Role;
+    objectToSend.MessageDate=$filter('formatDateToFirebaseString')(new Date());
+    objectToSend.MessageContent=$scope.newMessageMobile;
+    //Add message to conversation
+    Messages.addNewMessageToConversation($scope.selectedIndex,$scope.newMessageMobile,new Date());
+    //Send message request
+    RequestToServer.sendRequest('Message',objectToSend);
+    $scope.newMessageMobile=''; 
+    
 }
 });
 
